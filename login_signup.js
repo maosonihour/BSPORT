@@ -16,44 +16,237 @@ export default class App extends Component{
       isSignUp: false,
       email: "",
       pass: "",
+      errorEmailLogin:"",
+      errorPasswordLogin:"",
+      ip: "http://192.168.1.19:3000",
+      newAccount: {
+        name: "",
+        email: "",
+        phoneNumber: "",
+        password: "",
+        errorNameSignUp: "",
+        errorEmailSignUp: "",
+        errorPhoneNumberSignUp: "",
+        errorPasswordSignUp: "",
+      },
     }
   };
 
-  createButtonAlert = () =>
-    Alert.alert(
-      "Testing",
-      "Mach read te ke testing tah",
-      [
-        {
-          text: "Cancel",
-          onPress: () => console.log("Cancel Pressed"),
-          style: "cancel"
-        },
-        { text: "OK", onPress: () => console.log("OK Pressed") }
-      ],
-      { cancelable: false }
-    );
-  
+  getDataSignUpUsingPost(){
+    //POST json 
+    var dataToSend = {user_email: this.state.newAccount.email , user_password: this.state.newAccount.password,username: this.state.newAccount.name, user_phonenumber: this.state.newAccount.phoneNumber};
+    //making data to send on server
+    var formBody = [];
+    for (var key in dataToSend) {
+      var encodedKey = encodeURIComponent(key);
+      var encodedValue = encodeURIComponent(dataToSend[key]);
+      formBody.push(encodedKey + "=" + encodedValue);
+    }
+    formBody = formBody.join("&");
+    //POST request 
+    fetch(this.state.ip+'/users/register', {
+      method: "POST",//Request Type 
+      body: formBody,//post body 
+      headers: {//Header Defination 
+        'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'
+      },
+    })
+    .then((response) => response.json())
+    //If response is in json then in success
+    .then((responseJson) => {
+        var status = responseJson["status"];
+        if(status == "success"){
+          Actions.Home({userAccount: responseJson["userData"]});
+        // }else if (status == null){       //pel wrong password vea ot return ey te 
+        //   alert("error");
+        }else{        //vea return (status == "\"User does not exist\"")
+          alert("Email or Password Incorrect");
+        }
+        console.log(responseJson);
+    })
+    //If response is not in json then in error
+    .catch((error) => {
+      alert(JSON.stringify(error));
+      console.error(error);
+    });
+  }
 
-  validate = (text) => {
+  getDataSignInUsingPost(){
+    //POST json 
+    var dataToSend = {user_email: this.state.email , user_password: this.state.pass};
+    //making data to send on server
+    var formBody = [];
+    for (var key in dataToSend) {
+      var encodedKey = encodeURIComponent(key);
+      var encodedValue = encodeURIComponent(dataToSend[key]);
+      formBody.push(encodedKey + "=" + encodedValue);
+    }
+    formBody = formBody.join("&");
+    //POST request 
+    fetch(this.state.ip+'/users/login', {
+      method: "POST",//Request Type 
+      body: formBody,//post body 
+      headers: {//Header Defination 
+        'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'
+      },
+    })
+    .then((response) => response.json())
+    //If response is in json then in success
+    .then((responseJson) => {
+        var status = responseJson["status"];
+        if(status == "success"){
+          Actions.Home({userAccount: responseJson["user"]});
+        // }else if (status == null){       //pel wrong password vea ot return ey te 
+        //   alert("error");
+        }else{        //vea return (status == "\"User does not exist\"")
+          alert("Email or Password Incorrect");
+        }
+        console.log(responseJson);
+    })
+    //If response is not in json then in error
+    .catch((error) => {
+      alert(JSON.stringify(error));
+      console.error(error);
+    });
+  }
+  // createButtonAlert = () =>
+  //   Alert.alert(
+  //     "Testing",
+  //     "Mach read te ke testing tah",
+  //     [
+  //       {
+  //         text: "Cancel",
+  //         onPress: () => console.log("Cancel Pressed"),
+  //         style: "cancel"
+  //       },
+  //       { text: "OK", onPress: () => console.log("OK Pressed") }
+  //     ],
+  //     { cancelable: false }
+  //   );
+
+  validateLogin = (text) => {
     console.log(text);
+    console.log("password: " + this.state.pass);
     let reg = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/;
+    if(this.state.pass == ""){
+      this.setState({
+        errorPasswordLogin:"Invalid Password",
+      })
+    }else{
+      this.setState({
+        errorPasswordLogin:"",
+      })
+    }
     if (reg.test(text) === false) {
-      alert("Email is Not Correct");
-    }else{ 
-      if(this.state.email == "hourftg123@gmail.com"){
-        if(this.state.pass == "123456789"){
-          return Actions.Home();
-        }
-        else{
-          alert("Incorrect Email or Password");
-        }
-      }
+      this.setState({
+        errorEmailLogin:"Invalid Email",
+      })
+    }else{
+      this.setState({
+        errorEmailLogin:"",
+      }) 
+      return this.getDataSignInUsingPost();
+        
     }
   }
   
-
-
+  
+  validateSignUp = (email,phone) => {
+    
+    let regE = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/;
+    if(this.state.newAccount.password == ""){
+      this.setState({
+        newAccount: {
+          name: this.state.newAccount.name,
+          email: this.state.newAccount.email,
+          phoneNumber: this.state.newAccount.phoneNumber,
+          password: this.state.newAccount.password,
+          errorNameSignUp: this.state.newAccount.errorNameSignUp,
+          errorEmailSignUp: this.state.newAccount.errorEmailSignUp,
+          errorPhoneNumberSignUp: this.state.newAccount.errorPhoneNumberSignUp,
+          errorPasswordSignUp: "Invalid Password",
+        }
+      })
+    }else{
+      this.setState({
+        
+        newAccount: {
+          name: this.state.newAccount.name,
+          email: this.state.newAccount.email,
+          phoneNumber: this.state.newAccount.phoneNumber,
+          password: this.state.newAccount.password,
+          errorNameSignUp: this.state.newAccount.errorNameSignUp,
+          errorEmailSignUp: this.state.newAccount.errorEmailSignUp,
+          errorPhoneNumberSignUp: this.state.newAccount.errorPhoneNumberSignUp,
+          errorPasswordSignUp: "",
+        }
+      })
+    }
+    let regP = /^[0]\d{8,9}$/;
+    if (regE.test(email) === false) {
+      this.setState({
+        
+        newAccount: {
+          name: this.state.newAccount.name,
+          email: this.state.newAccount.email,
+          phoneNumber: this.state.newAccount.phoneNumber,
+          password: this.state.newAccount.password,
+          errorNameSignUp: this.state.newAccount.errorNameSignUp,
+          errorEmailSignUp: "Incorrect Email",
+          errorPhoneNumberSignUp: this.state.newAccount.errorPhoneNumberSignUp,
+          errorPasswordSignUp: this.state.newAccount.errorPasswordSignUp,
+        }
+      })
+      console.log("test email validate unsuccess")
+    }else{
+      this.setState({
+        
+        newAccount: {
+          name: this.state.newAccount.name,
+          email: this.state.newAccount.email,
+          phoneNumber: this.state.newAccount.phoneNumber,
+          password: this.state.newAccount.password,
+          errorNameSignUp: this.state.newAccount.errorNameSignUp,
+          errorEmailSignUp: "",
+          errorPhoneNumberSignUp: this.state.newAccount.errorPhoneNumberSignUp,
+          errorPasswordSignUp: this.state.newAccount.errorPasswordSignUp,
+        }
+      }) 
+      console.log("test email validate success")
+      if (regP.test(phone) === false) {
+        this.setState({
+          
+        newAccount: {
+          name: this.state.newAccount.name,
+          email: this.state.newAccount.email,
+          phoneNumber: this.state.newAccount.phoneNumber,
+          password: this.state.newAccount.password,
+          errorNameSignUp: this.state.newAccount.errorNameSignUp,
+          errorEmailSignUp: this.state.newAccount.errorEmailSignUp,
+          errorPhoneNumberSignUp: "Invalid Phone Number Format",
+          errorPasswordSignUp: this.state.newAccount.errorPasswordSignUp,
+        }
+      })
+      console.log("test email validate success phonenumber unsucess")
+      }else{
+        this.setState({
+          
+        newAccount: {
+          name: this.state.newAccount.name,
+          email: this.state.newAccount.email,
+          phoneNumber: this.state.newAccount.phoneNumber,
+          password: this.state.newAccount.password,
+          errorNameSignUp: this.state.newAccount.errorNameSignUp,
+          errorEmailSignUp: this.state.newAccount.errorEmailSignUp,
+          errorPhoneNumberSignUp: "",
+          errorPasswordSignUp: this.state.newAccount.errorPasswordSignUp,
+        }
+        }) 
+        console.log("test all validate success")
+        return this.getDataSignUpUsingPost();
+      } 
+    }
+  }
   isSignIn = () =>
       this.setState({
         isSignUp: false,
@@ -92,26 +285,25 @@ export default class App extends Component{
               value={this.state.email}
               placeholderTextColor="#eee"
               errorStyle={{color: 'red'}}
-              errorMessage='Invalid Email'
+              errorMessage={this.state.errorEmailLogin}
               leftIcon={<Icon name="email" size={25} color="white"  style={{paddingHorizontal: 8}} />}
                   />
 
               <Input
               secureTextEntry={true}
               inputContainerStyle={{borderBottomColor:"white",borderBottomWidth:1}}
-              textContentType="emailAddress"
+              textContentType="password"
               placeholder="Password"
               maxLength={20}
               onChangeText={(pass) => {this.setState({pass: this.state.a=pass})}}
               placeholderTextColor="#eee"
               errorStyle={{color: 'red'}}
-              errorMessage='Incorrect Password'
+              errorMessage={this.state.errorPasswordLogin}
               leftIcon={<Icon name="locked" size={25} color="white"  style={{paddingHorizontal: 8}} />}
                   />
         
           <TouchableHighlight
-            // onPress={() => Actions.Home()}
-            onPress={() => this.validate(this.state.email)}
+            onPress={() => this.validateLogin(this.state.email)}
             >
               <LinearGradient
                     style={styles.submitText}
@@ -149,50 +341,104 @@ export default class App extends Component{
           inputContainerStyle={{borderBottomColor:"white",borderBottomWidth:1}}
           textContentType="username"
           placeholder="Username"
-          onChangeText={(searchString) => {this.setState({searchString})}}
+          onChangeText={(name) => {this.setState(
+            { newAccount: {
+              name: name,
+              email: this.state.newAccount.email,
+              phoneNumber: this.state.newAccount.phoneNumber,
+              password: this.state.newAccount.password,
+              errorNameSignUp: this.state.newAccount.errorNameSignUp,
+              errorEmailSignUp: this.state.newAccount.errorEmailSignUp,
+              errorPhoneNumberSignUp: this.state.newAccount.errorPhoneNumberSignUp,
+              errorPasswordSignUp: this.state.newAccount.errorPasswordSignUp,
+            }
+            
+          })}}
           placeholderTextColor="#eee"
-
+          value={this.state.newAccount.name}
           leftIcon={<Icon name="person" size={25} color="white"  style={{paddingHorizontal: 8}} />}
               />
 
           <Input
+          value={this.state.newAccount.email}
           maxLength={50}
           inputContainerStyle={{borderBottomColor:"white",borderBottomWidth:1}}
           textContentType="emailAddress"
           placeholder="Email"
-          onChangeText={(searchString) => {this.setState({searchString})}}
+          onChangeText={(email) => {this.setState(
+            { newAccount: {
+              name: this.state.newAccount.name,
+              email: email,
+              phoneNumber: this.state.newAccount.phoneNumber,
+              password: this.state.newAccount.password,
+              errorNameSignUp: this.state.newAccount.errorNameSignUp,
+              errorEmailSignUp: this.state.newAccount.errorEmailSignUp,
+              errorPhoneNumberSignUp: this.state.newAccount.errorPhoneNumberSignUp,
+              errorPasswordSignUp: this.state.newAccount.errorPasswordSignUp,
+            }
+            
+          })}}
           placeholderTextColor="#eee"
           errorStyle={{color: 'red'}}
-          errorMessage='Invalid email'
+          errorMessage={this.state.errorEmailSignUp}
           leftIcon={<Icon name="email" size={25} color="white"  style={{paddingHorizontal: 8}} />}
               />
 
+
           <Input
+          value={this.state.newAccount.phoneNumber}
           maxLength={12}
           inputContainerStyle={{borderBottomColor:"white",borderBottomWidth:1}}
           textContentType="telephoneNumber"
           placeholder="Phone Number"
-          onChangeText={(searchString) => {this.setState({searchString})}}
+          onChangeText={(phone) => {this.setState(
+            { newAccount: {
+              name: this.state.newAccount.name,
+              email: this.state.newAccount.email,
+              phoneNumber: phone,
+              password: this.state.newAccount.password,
+              errorNameSignUp: this.state.newAccount.errorNameSignUp,
+              errorEmailSignUp: this.state.newAccount.errorEmailSignUp,
+              errorPhoneNumberSignUp: this.state.newAccount.errorPhoneNumberSignUp,
+              errorPasswordSignUp: this.state.newAccount.errorPasswordSignUp,
+            }
+            
+          })}}
           placeholderTextColor="#eee"
           errorStyle={{color: 'red'}}
-          errorMessage='Invalid Phone Number'
+          errorMessage={this.state.newAccount.errorPhoneNumberSignUp}
           leftIcon={<Icon name="phone" size={25} color="white"  style={{paddingHorizontal: 8}} />}
               />
 
           <Input
+          value={this.state.newAccount.password}
           maxLength={20}
+          secureTextEntry={true}
           inputContainerStyle={{borderBottomColor:"white",borderBottomWidth:1}}
-          textContentType="password"
+          textContentType="newPassword"
           placeholder="Password"
-          onChangeText={(searchString) => {this.setState({searchString})}}
+          onChangeText={(pass) => {this.setState(
+            { newAccount: {
+              name: this.state.newAccount.name,
+              email: this.state.newAccount.email,
+              phoneNumber: this.state.newAccount.phoneNumber,
+              password: pass,
+              errorNameSignUp: this.state.newAccount.errorNameSignUp,
+              errorEmailSignUp: this.state.newAccount.errorEmailSignUp,
+              errorPhoneNumberSignUp: this.state.newAccount.errorPhoneNumberSignUp,
+              errorPasswordSignUp: this.state.newAccount.errorPasswordSignUp,
+            }
+            
+          })}}
           placeholderTextColor="#eee"
           errorStyle={{color: 'red'}}
-          errorMessage='Incorrect Password'
+          errorMessage={this.state.errorPasswordSignUp}
           leftIcon={<Icon name="locked" size={25} color="white"  style={{paddingHorizontal: 8}} />}
               />
 
           <TouchableHighlight
-          onPress={() => Actions.Home()}
+          // onPress={() => Actions.Home()}
+          onPress={() => this.validateSignUp(this.state.newAccount.email, this.state.newAccount.phoneNumber) }
           >
             <LinearGradient
                   style={styles.submitText}
